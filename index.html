@@ -46,4 +46,150 @@
     .prize-medal { font-size: 120px; animation: bounce 0.6s infinite alternate; }
     .prize-text { color: #fff; font-size: 28px; font-weight: 500; margin-top: 20px; }
     .prize-name { color: #FAC775; font-size: 32px; font-weight: 500; margin-top: 8px; }
-    .prize-close { margin-top: 30px; padding: 12px 30px; background: #fff; border: none; border-radius: 12px; font
+    .prize-close { margin-top: 30px; padding: 12px 30px; background: #fff; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; }
+    @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.15); } }
+  </style>
+</head>
+<body>
+
+<div class="prize-overlay" id="prizeOverlay">
+  <div class="prize-medal">🏅</div>
+  <div class="prize-name" id="prizeName"></div>
+  <div class="prize-text">זכית בפרס!</div>
+  <button class="prize-close" onclick="document.getElementById('prizeOverlay').classList.remove('show')">סגור</button>
+</div>
+
+<div class="header">
+  <h1>📖 מבצע תורה ותפילה</h1>
+  <p>לימוד תורה ותפילה במניין</p>
+  <span class="badge live" id="badge">● טוען...</span>
+</div>
+<div class="nav">
+  <button class="active" onclick="switchTab('leaderboard', this)">טבלה</button>
+  <button onclick="switchTab('stats', this)">פירוט</button>
+  <button onclick="switchTab('history', this)">היסטוריה</button>
+</div>
+<div class="content">
+  <div class="tab active" id="tab-leaderboard">
+    <div id="leaderboard"></div>
+    <button class="refresh-btn" onclick="loadData()">רענן ↺</button>
+  </div>
+  <div class="tab" id="tab-stats">
+    <div id="stats"></div>
+  </div>
+  <div class="tab" id="tab-history">
+    <div id="history"></div>
+  </div>
+</div>
+
+<script>
+  const API = 'https://torah-points-webhook.onrender.com/points';
+  const CHILDREN = [
+    { id: 'שמואל', color: '#B5D4F4', textColor: '#0C447C' },
+    { id: 'יוסף',  color: '#9FE1CB', textColor: '#085041' },
+    { id: 'דוד',   color: '#FAC775', textColor: '#633806' },
+    { id: 'ידידיה',color: '#F4C0D1', textColor: '#72243E' },
+  ];
+  const BAR_COLORS = ['#378ADD','#1D9E75','#BA7517','#D4537E'];
+  const MEDALS = ['🥇','🥈','🥉','4️⃣'];
+  let shownPrize = {};
+
+  function switchTab(tab, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-'+tab).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  async function loadData() {
+    const badge = document.getElementById('badge');
+    try {
+      const res = await fetch(API);
+      const data = await res.json();
+      badge.className = 'badge live';
+      badge.textContent = '● חי';
+      renderLeaderboard(data);
+      renderStats(data);
+      renderHistory(data);
+      checkPrize(data);
+    } catch(e) {
+      badge.className = 'badge error';
+      badge.textContent = 'שגיאת חיבור';
+    }
+  }
+
+  function checkPrize(data) {
+    for (const child of CHILDREN) {
+      const total = data.totals?.[child.id] || 0;
+      if (total >= 50 && !shownPrize[child.id]) {
+        shownPrize[child.id] = true;
+        document.getElementById('prizeName').textContent = child.id;
+        document.getElementById('prizeOverlay').classList.add('show');
+        break;
+      }
+    }
+  }
+
+  function renderLeaderboard(data) {
+    const sorted = CHILDREN.slice().sort((a,b) => (data.totals?.[b.id]||0)-(data.totals?.[a.id]||0));
+    const max = Math.max(...CHILDREN.map(c => data.totals?.[c.id]||0), 1);
+    document.getElementById('leaderboard').innerHTML = sorted.map((c,i) => `
+      <div class="lb-row">
+        <span class="medal">${MEDALS[i]}</span>
+        <span class="lb-name">${c.id}</span>
+        <div class="bar-wrap"><div class="bar" style="width:${Math.round((data.totals?.[c.id]||0)/max*100)}%;background:${BAR_COLORS[i]}"></div></div>
+        <span class="lb-pts">${data.totals?.[c.id]||0}</span>
+      </div>`).join('');
+  }
+
+  function renderStats(data) {
+    document.getElementById('stats').innerHTML = CHILDREN.map(c => {
+      const breakdown = data.points?.[c.id] || {};
+      const total = data.totals?.[c.id] || 0;
+      const rows = Object.entries(breakdown).map(([task, pts]) => `
+        <div class="breakdown-row">
+          <span>${task}</span>
+          <span class="breakdown-pts">${pts} נק'</span>
+        </div>`).join('');
+      return `
+        <div class="card">
+          <div class="card-header">
+            <div class="avatar" style="background:${c.color};color:${c.textColor}">${c.id[0]}</div>
+            <div>
+              <div class="card-name">${c.id}</div>
+              <div class="card-total">סה"כ: <span class="breakdown-pts">${total} נק'</span></div>
+            </div>
+          </div>
+          ${rows ? `<div class="breakdown">${rows}</div>` : '<div style="font-size:13px;color:#aaa">אין פעילות עדיין</div>'}
+        </div>`;
+    }).join('');
+  }
+
+  function renderHistory(data) {
+    const hist = data.history || [];
+    if (hist.length === 0) {
+      document.getElementById('history').innerHTML = '<div class="empty">אין היסטוריה עדיין</div>';
+      return;
+    }
+    document.getElementById('history').innerHTML = hist.slice(0,20).map(h => {
+      const d = new Date(h.time);
+      const timeStr = d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+      const dateStr = d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit'});
+      return `<div class="hist-row">
+        <div>
+          <div class="hist-child">${h.child}</div>
+          <div class="hist-tasks">${(h.tasks||[]).join(' · ')}</div>
+        </div>
+        <div style="text-align:left">
+          <div class="hist-pts">+${h.pts}</div>
+          <div class="hist-time">${dateStr} ${timeStr}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  loadData();
+  setInterval(loadData, 30000);
+</script>
+</body>
+</html>
