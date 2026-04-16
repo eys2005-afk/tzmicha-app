@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>לוח הישגים</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background: #F8F7F4; direction: rtl; }
+    .header { background: #fff; padding: 20px; text-align: center; border-bottom: 1px solid #E0DED8; }
+    .header h1 { font-size: 22px; font-weight: 500; }
+    .header p { font-size: 13px; color: #888; margin-top: 4px; }
+    .badge { display: inline-block; margin-top: 6px; font-size: 12px; padding: 3px 10px; border-radius: 8px; }
+    .badge.live { background: #EAF3DE; color: #27500A; }
+    .badge.error { background: #FCEBEB; color: #791F1F; }
+    .nav { display: flex; gap: 8px; padding: 12px; background: #fff; border-bottom: 1px solid #E0DED8; }
+    .nav button { flex: 1; padding: 8px; border: 1px solid #E0DED8; border-radius: 8px; background: #fff; font-size: 13px; color: #888; cursor: pointer; }
+    .nav button.active { background: #F1EFE8; color: #1A1A1A; font-weight: 500; border-color: #B4B2A9; }
+    .content { padding: 12px; max-width: 600px; margin: 0 auto; }
+    .tab { display: none; }
+    .tab.active { display: block; }
+    .lb-row { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 12px; padding: 12px; border: 1px solid #E0DED8; margin-bottom: 8px; }
+    .medal { font-size: 20px; width: 28px; text-align: center; }
+    .lb-name { font-size: 15px; font-weight: 500; width: 70px; }
+    .bar-wrap { flex: 1; background: #F1EFE8; border-radius: 20px; height: 8px; overflow: hidden; }
+    .bar { height: 8px; border-radius: 20px; transition: width 0.5s; }
+    .lb-pts { font-size: 14px; font-weight: 500; color: #633806; width: 35px; text-align: left; }
+    .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .card { background: #fff; border-radius: 12px; padding: 16px; border: 1px solid #E0DED8; }
+    .avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 500; margin-bottom: 8px; }
+    .card-name { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+    .pts-badge { display: inline-block; background: #FAEEDA; color: #633806; font-size: 13px; font-weight: 500; padding: 3px 10px; border-radius: 8px; }
+    .hist-row { display: flex; justify-content: space-between; align-items: center; background: #fff; border-radius: 10px; padding: 12px; border: 1px solid #E0DED8; margin-bottom: 6px; }
+    .hist-child { font-size: 14px; font-weight: 500; }
+    .hist-tasks { font-size: 12px; color: #888; margin-top: 2px; }
+    .hist-pts { font-size: 14px; font-weight: 500; color: #27500A; }
+    .hist-time { font-size: 11px; color: #aaa; margin-top: 2px; text-align: left; }
+    .empty { text-align: center; padding: 40px; color: #888; }
+    .refresh-btn { margin-top: 10px; padding: 8px 16px; border: 1px solid #E0DED8; border-radius: 8px; background: #fff; cursor: pointer; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📖 לוח הישגים</h1>
+    <p>לימוד תורה ועזרה בבית</p>
+    <span class="badge live" id="badge">● טוען...</span>
+  </div>
+  <div class="nav">
+    <button class="active" onclick="switchTab('leaderboard', this)">טבלה</button>
+    <button onclick="switchTab('cards', this)">כרטיסים</button>
+    <button onclick="switchTab('history', this)">היסטוריה</button>
+  </div>
+  <div class="content">
+    <div class="tab active" id="tab-leaderboard">
+      <div id="leaderboard"></div>
+      <button class="refresh-btn" onclick="loadData()">רענן ↺</button>
+    </div>
+    <div class="tab" id="tab-cards">
+      <div class="card-grid" id="cards"></div>
+    </div>
+    <div class="tab" id="tab-history">
+      <div id="history"></div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'https://torah-points-webhook.onrender.com/points';
+    const CHILDREN = [
+      { id: 'שמואל', color: '#B5D4F4', textColor: '#0C447C' },
+      { id: 'יוסף',  color: '#9FE1CB', textColor: '#085041' },
+      { id: 'דוד',   color: '#FAC775', textColor: '#633806' },
+      { id: 'ידידיה',color: '#F4C0D1', textColor: '#72243E' },
+    ];
+    const BAR_COLORS = ['#378ADD','#1D9E75','#BA7517','#D4537E'];
+    const MEDALS = ['🥇','🥈','🥉','4️⃣'];
+
+    function switchTab(tab, btn) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-'+tab).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    async function loadData() {
+      const badge = document.getElementById('badge');
+      try {
+        const res = await fetch(API);
+        const data = await res.json();
+        badge.className = 'badge live';
+        badge.textContent = '● חי';
+        renderLeaderboard(data);
+        renderCards(data);
+        renderHistory(data);
+      } catch(e) {
+        badge.className = 'badge error';
+        badge.textContent = 'שגיאת חיבור';
+      }
+    }
+
+    function renderLeaderboard(data) {
+      const sorted = CHILDREN.slice().sort((a,b) => (data.points[b.id]||0)-(data.points[a.id]||0));
+      const max = Math.max(...CHILDREN.map(c => data.points[c.id]||0), 1);
+      document.getElementById('leaderboard').innerHTML = sorted.map((c,i) => `
+        <div class="lb-row">
+          <span class="medal">${MEDALS[i]}</span>
+          <span class="lb-name">${c.id}</span>
+          <div class="bar-wrap"><div class="bar" style="width:${Math.round((data.points[c.id]||0)/max*100)}%;background:${BAR_COLORS[i]}"></div></div>
+          <span class="lb-pts">${data.points[c.id]||0}</span>
+        </div>`).join('');
+    }
+
+    function renderCards(data) {
+      document.getElementById('cards').innerHTML = CHILDREN.map(c => `
+        <div class="card">
+          <div class="avatar" style="background:${c.color};color:${c.textColor}">${c.id[0]}</div>
+          <div class="card-name">${c.id}</div>
+          <span class="pts-badge">${data.points[c.id]||0} נק'</span>
+        </div>`).join('');
+    }
+
+    function renderHistory(data) {
+      const hist = data.history || [];
+      if (hist.length === 0) {
+        document.getElementById('history').innerHTML = '<div class="empty">אין היסטוריה עדיין</div>';
+        return;
+      }
+      document.getElementById('history').innerHTML = hist.slice(0,20).map(h => {
+        const d = new Date(h.time);
+        const timeStr = d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+        const dateStr = d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit'});
+        return `<div class="hist-row">
+          <div>
+            <div class="hist-child">${h.child}</div>
+            <div class="hist-tasks">${(h.tasks||[]).join(' · ')}</div>
+          </div>
+          <div style="text-align:left">
+            <div class="hist-pts">+${h.pts}</div>
+            <div class="hist-time">${dateStr} ${timeStr}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    loadData();
+    setInterval(loadData, 30000);
+  </script>
+</body>
+</html>
