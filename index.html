@@ -19,7 +19,8 @@
     .content { padding: 12px; max-width: 600px; margin: 0 auto; }
     .tab { display: none; }
     .tab.active { display: block; }
-    .lb-row { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 12px; padding: 12px; border: 1px solid #E0DED8; margin-bottom: 8px; }
+    .lb-row { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 12px; padding: 12px; border: 1px solid #E0DED8; margin-bottom: 8px; cursor: pointer; transition: background 0.15s; }
+    .lb-row:hover { background: #F8F7F4; }
     .medal { font-size: 20px; width: 28px; text-align: center; }
     .lb-name { font-size: 15px; font-weight: 500; width: 70px; }
     .bar-wrap { flex: 1; background: #F1EFE8; border-radius: 20px; height: 8px; overflow: hidden; }
@@ -28,11 +29,11 @@
     .card { background: #fff; border-radius: 12px; padding: 16px; border: 1px solid #E0DED8; margin-bottom: 12px; }
     .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
     .avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 500; flex-shrink: 0; }
+    .avatar-lg { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 500; margin: 0 auto 16px; }
     .card-name { font-size: 16px; font-weight: 500; }
     .card-total { font-size: 13px; color: #888; margin-top: 2px; }
-    .pts-badge { display: inline-block; background: #FAEEDA; color: #633806; font-size: 13px; font-weight: 500; padding: 3px 10px; border-radius: 8px; }
     .breakdown { border-top: 1px solid #F1EFE8; padding-top: 10px; }
-    .breakdown-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; font-size: 13px; color: #444; border-bottom: 1px solid #F8F7F4; }
+    .breakdown-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; color: #444; border-bottom: 1px solid #F8F7F4; }
     .breakdown-pts { font-weight: 500; color: #633806; }
     .hist-row { display: flex; justify-content: space-between; align-items: center; background: #fff; border-radius: 10px; padding: 12px; border: 1px solid #E0DED8; margin-bottom: 6px; }
     .hist-child { font-size: 14px; font-weight: 500; }
@@ -41,12 +42,33 @@
     .hist-time { font-size: 11px; color: #aaa; margin-top: 2px; text-align: left; }
     .empty { text-align: center; padding: 40px; color: #888; }
     .refresh-btn { margin-top: 10px; padding: 8px 16px; border: 1px solid #E0DED8; border-radius: 8px; background: #fff; cursor: pointer; font-size: 13px; }
-    .prize-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 999; align-items: center; justify-content: center; flex-direction: column; text-align: center; }
+    .children-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .child-btn { background: #fff; border-radius: 12px; padding: 20px 16px; border: 1px solid #E0DED8; cursor: pointer; text-align: center; transition: all 0.15s; }
+    .child-btn:hover { border-color: #378ADD; background: #E6F1FB; }
+    .child-btn .name { font-size: 15px; font-weight: 500; margin-top: 8px; }
+    .child-btn .pts { font-size: 13px; color: #888; margin-top: 4px; }
+    .progress-wrap { background: #F1EFE8; border-radius: 20px; height: 12px; overflow: hidden; margin: 8px 0; }
+    .progress-bar { height: 12px; border-radius: 20px; background: #378ADD; transition: width 0.5s; }
+    .progress-label { font-size: 12px; color: #888; text-align: center; margin-bottom: 16px; }
+    .back-btn { display: flex; align-items: center; gap: 6px; font-size: 14px; color: #378ADD; cursor: pointer; margin-bottom: 16px; background: none; border: none; padding: 0; }
+    .admin-section { margin-bottom: 20px; }
+    .admin-title { font-size: 13px; font-weight: 500; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .danger-btn { padding: 10px 16px; border: 1px solid #F09595; border-radius: 8px; background: #FCEBEB; color: #791F1F; cursor: pointer; font-size: 13px; margin-bottom: 8px; width: 100%; text-align: right; }
+    .danger-btn:hover { background: #F7C1C1; }
+    .prize-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; align-items: center; justify-content: center; flex-direction: column; text-align: center; }
     .prize-overlay.show { display: flex; }
     .prize-medal { font-size: 120px; animation: bounce 0.6s infinite alternate; }
     .prize-text { color: #fff; font-size: 28px; font-weight: 500; margin-top: 20px; }
     .prize-name { color: #FAC775; font-size: 32px; font-weight: 500; margin-top: 8px; }
     .prize-close { margin-top: 30px; padding: 12px 30px; background: #fff; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; }
+    .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 998; align-items: center; justify-content: center; }
+    .overlay.show { display: flex; }
+    .modal { background: #fff; border-radius: 16px; padding: 24px; width: 90%; max-width: 360px; text-align: center; }
+    .modal h2 { font-size: 18px; font-weight: 500; margin-bottom: 16px; }
+    .modal input { width: 100%; padding: 10px; border: 1px solid #E0DED8; border-radius: 8px; font-size: 16px; text-align: center; margin-bottom: 12px; direction: ltr; }
+    .modal button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; }
+    .modal .confirm { background: #1A1A1A; color: #fff; margin-bottom: 8px; }
+    .modal .cancel { background: #F1EFE8; color: #1A1A1A; }
     @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.15); } }
   </style>
 </head>
@@ -59,6 +81,15 @@
   <button class="prize-close" onclick="document.getElementById('prizeOverlay').classList.remove('show')">סגור</button>
 </div>
 
+<div class="overlay" id="adminModal">
+  <div class="modal">
+    <h2>כניסה לניהול</h2>
+    <input type="password" id="adminPass" placeholder="סיסמא" onkeydown="if(event.key==='Enter') checkAdmin()" />
+    <button class="confirm" onclick="checkAdmin()">כניסה</button>
+    <button class="cancel" onclick="closeAdminModal()">ביטול</button>
+  </div>
+</div>
+
 <div class="header">
   <h1>📖 מבצע תורה ותפילה</h1>
   <p>לימוד תורה ותפילה במניין</p>
@@ -66,24 +97,44 @@
 </div>
 <div class="nav">
   <button class="active" onclick="switchTab('leaderboard', this)">טבלה</button>
-  <button onclick="switchTab('stats', this)">פירוט</button>
+  <button onclick="switchTab('personal', this)">אישי</button>
   <button onclick="switchTab('history', this)">היסטוריה</button>
+  <button onclick="openAdminModal()">⚙️</button>
 </div>
 <div class="content">
+
   <div class="tab active" id="tab-leaderboard">
     <div id="leaderboard"></div>
     <button class="refresh-btn" onclick="loadData()">רענן ↺</button>
   </div>
-  <div class="tab" id="tab-stats">
-    <div id="stats"></div>
+
+  <div class="tab" id="tab-personal">
+    <div id="personal-home">
+      <div class="children-grid" id="childrenGrid"></div>
+    </div>
+    <div id="personal-detail" style="display:none">
+      <button class="back-btn" onclick="showPersonalHome()">◀ חזרה</button>
+      <div id="personalContent"></div>
+    </div>
   </div>
+
   <div class="tab" id="tab-history">
     <div id="history"></div>
   </div>
+
+  <div class="tab" id="tab-admin">
+    <div class="admin-section">
+      <div class="admin-title">איפוס נקודות</div>
+      <button class="danger-btn" onclick="resetAll()">🗑 איפוס כל הילדים</button>
+      <div id="resetButtons"></div>
+    </div>
+  </div>
+
 </div>
 
 <script>
   const API = 'https://torah-points-webhook.onrender.com/points';
+  const ADMIN_PASS = 'eys2005!';
   const CHILDREN = [
     { id: 'שמואל', color: '#B5D4F4', textColor: '#0C447C' },
     { id: 'יוסף',  color: '#9FE1CB', textColor: '#085041' },
@@ -93,12 +144,103 @@
   const BAR_COLORS = ['#378ADD','#1D9E75','#BA7517','#D4537E'];
   const MEDALS = ['🥇','🥈','🥉','4️⃣'];
   let shownPrize = {};
+  let currentData = null;
 
   function switchTab(tab, btn) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-'+tab).classList.add('active');
-    btn.classList.add('active');
+    if(btn) btn.classList.add('active');
+  }
+
+  function openAdminModal() {
+    document.getElementById('adminPass').value = '';
+    document.getElementById('adminModal').classList.add('show');
+    setTimeout(() => document.getElementById('adminPass').focus(), 100);
+  }
+
+  function closeAdminModal() {
+    document.getElementById('adminModal').classList.remove('show');
+  }
+
+  function checkAdmin() {
+    if(document.getElementById('adminPass').value === ADMIN_PASS) {
+      closeAdminModal();
+      switchTab('admin', null);
+      renderAdminButtons();
+    } else {
+      alert('סיסמא שגויה');
+    }
+  }
+
+  function renderAdminButtons() {
+    document.getElementById('resetButtons').innerHTML = CHILDREN.map(c => `
+      <button class="danger-btn" onclick="resetChild('${c.id}')">🗑 איפוס ${c.id}</button>
+    `).join('');
+  }
+
+  async function resetAll() {
+    if(!confirm('לאפס את כל הנקודות?')) return;
+    await fetch(API.replace('/points', '/reset'), { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ all: true }) });
+    await loadData();
+    alert('כל הנקודות אופסו!');
+  }
+
+  async function resetChild(name) {
+    if(!confirm(`לאפס את הנקודות של ${name}?`)) return;
+    await fetch(API.replace('/points', '/reset'), { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ child: name }) });
+    await loadData();
+    alert(`הנקודות של ${name} אופסו!`);
+  }
+
+  function showPersonalHome() {
+    document.getElementById('personal-home').style.display = 'block';
+    document.getElementById('personal-detail').style.display = 'none';
+  }
+
+  function showPersonalDetail(childId) {
+    if(!currentData) return;
+    const child = CHILDREN.find(c => c.id === childId);
+    const total = currentData.totals?.[childId] || 0;
+    const breakdown = currentData.points?.[childId] || {};
+    const hist = (currentData.history || []).filter(h => h.child === childId);
+    const progress = Math.min(Math.round(total / 50 * 100), 100);
+
+    const rows = Object.entries(breakdown).map(([task, pts]) => `
+      <div class="breakdown-row">
+        <span>${task}</span>
+        <span class="breakdown-pts">${pts} נק'</span>
+      </div>`).join('');
+
+    const histRows = hist.slice(0,10).map(h => {
+      const d = new Date(h.time);
+      const timeStr = d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+      const dateStr = d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit'});
+      return `<div class="hist-row">
+        <div>
+          <div class="hist-tasks">${(h.tasks||[]).join(' · ')}</div>
+        </div>
+        <div style="text-align:left">
+          <div class="hist-pts">+${h.pts}</div>
+          <div class="hist-time">${dateStr} ${timeStr}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    document.getElementById('personalContent').innerHTML = `
+      <div style="text-align:center; margin-bottom:20px;">
+        <div class="avatar-lg" style="background:${child.color};color:${child.textColor}">${child.id[0]}</div>
+        <div style="font-size:22px;font-weight:500">${child.id}</div>
+        <div style="font-size:32px;font-weight:500;color:#633806;margin-top:8px">${total} נק'</div>
+      </div>
+      <div class="progress-wrap"><div class="progress-bar" style="width:${progress}%"></div></div>
+      <div class="progress-label">${total}/50 נקודות לפרס</div>
+      ${rows ? `<div class="card"><div class="admin-title">פירוט</div><div class="breakdown">${rows}</div></div>` : ''}
+      ${histRows ? `<div class="admin-title" style="margin-top:16px">היסטוריה</div>${histRows}` : ''}
+    `;
+
+    document.getElementById('personal-home').style.display = 'none';
+    document.getElementById('personal-detail').style.display = 'block';
   }
 
   async function loadData() {
@@ -106,10 +248,11 @@
     try {
       const res = await fetch(API);
       const data = await res.json();
+      currentData = data;
       badge.className = 'badge live';
       badge.textContent = '● חי';
       renderLeaderboard(data);
-      renderStats(data);
+      renderChildrenGrid(data);
       renderHistory(data);
       checkPrize(data);
     } catch(e) {
@@ -119,9 +262,9 @@
   }
 
   function checkPrize(data) {
-    for (const child of CHILDREN) {
+    for(const child of CHILDREN) {
       const total = data.totals?.[child.id] || 0;
-      if (total >= 50 && !shownPrize[child.id]) {
+      if(total >= 50 && !shownPrize[child.id]) {
         shownPrize[child.id] = true;
         document.getElementById('prizeName').textContent = child.id;
         document.getElementById('prizeOverlay').classList.add('show');
@@ -134,7 +277,7 @@
     const sorted = CHILDREN.slice().sort((a,b) => (data.totals?.[b.id]||0)-(data.totals?.[a.id]||0));
     const max = Math.max(...CHILDREN.map(c => data.totals?.[c.id]||0), 1);
     document.getElementById('leaderboard').innerHTML = sorted.map((c,i) => `
-      <div class="lb-row">
+      <div class="lb-row" onclick="switchTab('personal', null); showPersonalDetail('${c.id}')">
         <span class="medal">${MEDALS[i]}</span>
         <span class="lb-name">${c.id}</span>
         <div class="bar-wrap"><div class="bar" style="width:${Math.round((data.totals?.[c.id]||0)/max*100)}%;background:${BAR_COLORS[i]}"></div></div>
@@ -142,32 +285,18 @@
       </div>`).join('');
   }
 
-  function renderStats(data) {
-    document.getElementById('stats').innerHTML = CHILDREN.map(c => {
-      const breakdown = data.points?.[c.id] || {};
-      const total = data.totals?.[c.id] || 0;
-      const rows = Object.entries(breakdown).map(([task, pts]) => `
-        <div class="breakdown-row">
-          <span>${task}</span>
-          <span class="breakdown-pts">${pts} נק'</span>
-        </div>`).join('');
-      return `
-        <div class="card">
-          <div class="card-header">
-            <div class="avatar" style="background:${c.color};color:${c.textColor}">${c.id[0]}</div>
-            <div>
-              <div class="card-name">${c.id}</div>
-              <div class="card-total">סה"כ: <span class="breakdown-pts">${total} נק'</span></div>
-            </div>
-          </div>
-          ${rows ? `<div class="breakdown">${rows}</div>` : '<div style="font-size:13px;color:#aaa">אין פעילות עדיין</div>'}
-        </div>`;
-    }).join('');
+  function renderChildrenGrid(data) {
+    document.getElementById('childrenGrid').innerHTML = CHILDREN.map(c => `
+      <div class="child-btn" onclick="showPersonalDetail('${c.id}')">
+        <div class="avatar" style="background:${c.color};color:${c.textColor};margin:0 auto">${c.id[0]}</div>
+        <div class="name">${c.id}</div>
+        <div class="pts">${data.totals?.[c.id]||0} נק'</div>
+      </div>`).join('');
   }
 
   function renderHistory(data) {
     const hist = data.history || [];
-    if (hist.length === 0) {
+    if(hist.length === 0) {
       document.getElementById('history').innerHTML = '<div class="empty">אין היסטוריה עדיין</div>';
       return;
     }
