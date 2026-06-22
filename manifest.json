@@ -1,0 +1,16 @@
+{
+  "name": "צמיחה · לוז וחשבון נפש",
+  "short_name": "צמיחה",
+  "description": "לוז יומי, שבועי וחודשי למעקב אישי — תורה, מידות, חינוך ובית — עם טבלת ניקוד וחשבון נפש.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F8F7F4",
+  "theme_color": "#F8F7F4",
+  "lang": "he",
+  "dir": "rtl",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
