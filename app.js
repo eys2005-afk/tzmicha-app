@@ -105,6 +105,7 @@ function seedState() {
 let state = null;
 let scoreScope = 'week';
 let formSubmit = null;
+let learningData = null;
 const LS_KEY = 'growthState_v1';
 
 function loadState() {
@@ -533,6 +534,80 @@ function switchTab(tab, btn) {
   window.scrollTo(0, 0);
 }
 
+/* ===================== לימוד יומי ===================== */
+const SEFARIA_API = 'https://www.sefaria.org/api/calendars?timezone=Asia/Jerusalem';
+
+function sefariaHref(ref) {
+  return 'https://www.sefaria.org.il/' + encodeURIComponent(ref) + '?lang=he';
+}
+
+function learningLinkBtn(label, href, cls) {
+  return '<a class="learn-link' + (cls ? ' ' + cls : '') + '" href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">' + esc(label) + '</a>';
+}
+
+function fetchLearning() {
+  var el = document.getElementById('learningCard');
+  if (el) el.innerHTML = '<div class="learn-card"><div class="learn-loading">טוען לוח שנה...</div></div>';
+  fetch(SEFARIA_API)
+    .then(function (r) { return r.json(); })
+    .then(function (data) { learningData = data; renderLearningCard(); })
+    .catch(function () { renderLearningCard(); });
+}
+
+function renderLearningCard() {
+  var el = document.getElementById('learningCard');
+  if (!el) return;
+
+  var items = (learningData && learningData.calendar_items) || [];
+
+  var daf = null, tehillim = null, parasha = null;
+  items.forEach(function (item) {
+    var titleHe = (item.title && item.title.he) || '';
+    var titleEn = (item.title && item.title.en) || '';
+    if (!daf && (titleHe.indexOf('דף יומי') !== -1 || titleEn.toLowerCase().indexOf('daf yomi') !== -1)) daf = item;
+    if (!tehillim && (titleHe.indexOf('תהל') !== -1 || titleEn.toLowerCase().indexOf('psalm') !== -1 || titleEn.toLowerCase().indexOf('tehil') !== -1)) tehillim = item;
+    if (!parasha && (titleHe.indexOf('פרש') !== -1 || item.category === 'Parasha' || titleEn.toLowerCase().indexOf('parash') !== -1)) parasha = item;
+  });
+
+  var html = '<div class="learn-card">';
+  html += '<div class="learn-title">📚 לימוד היום</div>';
+
+  if (!daf && !tehillim && !parasha) {
+    html += '<div class="learn-loading">לא ניתן לטעון — בדקו חיבור לאינטרנט' +
+      '<br><a class="learn-link primary" href="https://www.sefaria.org.il" target="_blank" rel="noopener noreferrer">ספריא</a></div>';
+  } else {
+    if (daf) {
+      var dafName = (daf.displayValue && daf.displayValue.he) || (daf.displayValue && daf.displayValue.en) || '';
+      html += '<div class="learn-row">' +
+        '<div class="learn-item-title">📖 דף יומי · <b>' + esc(dafName) + '</b></div>' +
+        '<div class="learn-links">' +
+        learningLinkBtn('📄 ספריא', sefariaHref(daf.url), 'primary') +
+        learningLinkBtn("▶ ר' סטפנסקי", 'https://www.5minutedaf.com', '') +
+        learningLinkBtn("🎙 ר' אורנשטיין", 'https://dafyomi.co.il', '') +
+        '</div></div>';
+    }
+    if (tehillim) {
+      var tehillimName = (tehillim.displayValue && tehillim.displayValue.he) || '';
+      html += '<div class="learn-row">' +
+        '<div class="learn-item-title">🙏 תהילים יומי · <b>' + esc(tehillimName) + '</b></div>' +
+        '<div class="learn-links">' +
+        learningLinkBtn('📄 ספריא', sefariaHref(tehillim.url), 'primary') +
+        '</div></div>';
+    }
+    if (parasha) {
+      var parashaName = (parasha.displayValue && parasha.displayValue.he) || '';
+      html += '<div class="learn-row">' +
+        '<div class="learn-item-title">📜 שניים מקרא · <b>' + esc(parashaName) + '</b></div>' +
+        '<div class="learn-links">' +
+        learningLinkBtn('📄 ספריא', sefariaHref(parasha.url), 'primary') +
+        '</div></div>';
+    }
+  }
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
 /* ===================== ענן (שלד — מופעל כשמגדירים Firebase) ===================== */
 const cloud = {
   enabled: false,
@@ -553,6 +628,7 @@ function init() {
   normalizeState();
   saveState();
   renderAll();
+  fetchLearning();
   // רישום Service Worker (רק בהגשה דרך שרת, לא בפתיחת קובץ מקומי)
   if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
     navigator.serviceWorker.register('sw.js').catch(function () {});
