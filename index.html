@@ -99,6 +99,29 @@
     }
     .mussar-link:hover { background: #ede9fe; }
 
+    /* ===== Inline text reader ===== */
+    .reader-toggle {
+      margin-top: 8px; width: 100%;
+      padding: 9px; border: 1px solid #e5e7eb; border-radius: 10px;
+      background: #f9fafb; color: #374151; font-size: 13px;
+      font-weight: 600; cursor: pointer; font-family: inherit;
+      transition: background .15s;
+    }
+    .reader-toggle:hover { background: #f3f4f6; }
+    .reader {
+      margin-top: 10px; padding: 14px;
+      background: #fcfbf7; border: 1px solid #efe9da; border-radius: 12px;
+      max-height: 50vh; overflow-y: auto;
+    }
+    .reader-ref { font-size: 12px; font-weight: 700; color: #b45309; margin-bottom: 8px; }
+    .reader .seg {
+      font-size: 17px; line-height: 1.95; color: #1f2937;
+      margin-bottom: 8px; text-align: justify;
+      font-family: "Frank Ruhl Libre", "Times New Roman", Georgia, serif;
+    }
+    .reader .seg sup { color: #9ca3af; font-size: 11px; }
+    .reader-loading { padding: 14px; text-align: center; color: #9ca3af; font-size: 13px; line-height: 1.7; }
+
     /* ===== Section labels ===== */
     .section-label { font-size: 11px; font-weight: 700; color: #9ca3af; margin: 18px 2px 8px; letter-spacing: .07em; }
 

@@ -604,12 +604,74 @@ function switchTab(tab, btn) {
 /* ===================== לימוד יומי ===================== */
 const SEFARIA_API = 'https://www.sefaria.org/api/calendars?timezone=Asia/Jerusalem';
 
-function sefariaHref(ref) {
-  return 'https://www.sefaria.org.il/' + encodeURIComponent(ref) + '?lang=he';
-}
+var textCache = {};
 
-function learningLinkBtn(label, href, cls) {
-  return '<a class="learn-link' + (cls ? ' ' + cls : '') + '" href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">' + esc(label) + '</a>';
+function textApiUrl(ref) { return 'https://www.sefaria.org/api/texts/' + ref + '?context=0&pad=0'; }
+
+function sanitizeSefaria(html) {
+  return String(html || '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')
+    .replace(/ on\w+="[^"]*"/gi, '')
+    .replace(/ on\w+='[^']*'/gi, '')
+    .replace(/javascript:/gi, '');
+}
+function flattenSegments(node, out) {
+  out = out || [];
+  if (Array.isArray(node)) node.forEach(function (x) { flattenSegments(x, out); });
+  else if (typeof node === 'string' && node.trim()) out.push(node);
+  return out;
+}
+function fetchSefariaText(refs) {
+  var list = Array.isArray(refs) ? refs.slice() : [refs];
+  var key = list.join('|');
+  if (textCache[key]) return Promise.resolve(textCache[key]);
+  function tryNext(i) {
+    if (i >= list.length) return Promise.reject(new Error('not found'));
+    return fetch(textApiUrl(list[i]))
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('http ' + r.status)); })
+      .then(function (data) {
+        var segs = flattenSegments(data.he);
+        if (!segs.length) return tryNext(i + 1);
+        var res = { heRef: data.heRef || '', segments: segs };
+        textCache[key] = res;
+        return res;
+      })
+      .catch(function () { return tryNext(i + 1); });
+  }
+  return tryNext(0);
+}
+// מייצר רשימת הפניות מועמדות (לכיסוי הבדלי תעתיק בספריא)
+function mussarRefs(entry) {
+  var r = entry.ref, cands = [r];
+  if (r.indexOf('Mesillat_Yesharim') === 0) cands.push(r.replace('Mesillat_Yesharim', 'Mesilat_Yesharim'));
+  else if (r.indexOf('Mesilat_Yesharim') === 0) cands.push(r.replace('Mesilat_Yesharim', 'Mesillat_Yesharim'));
+  return cands;
+}
+function toggleReader(key, btn) {
+  var box = document.getElementById('reader-' + key);
+  if (!box) return;
+  if (box.style.display === 'block') {
+    box.style.display = 'none';
+    if (btn) btn.textContent = btn.getAttribute('data-open');
+    return;
+  }
+  box.style.display = 'block';
+  if (btn) btn.textContent = btn.getAttribute('data-close');
+  if (box.getAttribute('data-loaded') === '1') return;
+  var refs = (box.getAttribute('data-refs') || '').split('|');
+  box.innerHTML = '<div class="reader-loading">טוען טקסט…</div>';
+  fetchSefariaText(refs).then(function (res) {
+    box.setAttribute('data-loaded', '1');
+    var body = res.segments.map(function (s) { return '<p class="seg">' + sanitizeSefaria(s) + '</p>'; }).join('');
+    box.innerHTML = (res.heRef ? '<div class="reader-ref">' + esc(res.heRef) + '</div>' : '') + body;
+  }).catch(function () {
+    box.innerHTML = '<div class="reader-loading">לא ניתן לטעון את הטקסט כעת — בדקו חיבור לאינטרנט ונסו שוב.</div>';
+  });
+}
+function readerBlock(key, refs) {
+  return '<button class="reader-toggle" data-open="▾ הצג טקסט ללימוד" data-close="▴ הסתר" onclick="toggleReader(\'' + key + '\', this)">▾ הצג טקסט ללימוד</button>' +
+    '<div class="reader" id="reader-' + key + '" data-refs="' + esc(refs.join('|')) + '" style="display:none"></div>';
 }
 
 function fetchLearning() {
@@ -636,39 +698,23 @@ function renderLearningCard() {
     if (!parasha && (titleHe.indexOf('פרש') !== -1 || item.category === 'Parasha' || titleEn.toLowerCase().indexOf('parash') !== -1)) parasha = item;
   });
 
+  function row(emoji, label, item, key) {
+    var name = (item.displayValue && item.displayValue.he) || (item.displayValue && item.displayValue.en) || '';
+    return '<div class="learn-row">' +
+      '<div class="learn-item-title">' + emoji + ' ' + esc(label) + ' · <b>' + esc(name) + '</b></div>' +
+      readerBlock(key, [item.url]) +
+      '</div>';
+  }
+
   var html = '<div class="learn-card">';
   html += '<div class="learn-title">📚 לימוד היום</div>';
 
   if (!daf && !tehillim && !parasha) {
-    html += '<div class="learn-loading">לא ניתן לטעון — בדקו חיבור לאינטרנט' +
-      '<br><a class="learn-link primary" href="https://www.sefaria.org.il" target="_blank" rel="noopener noreferrer">ספריא</a></div>';
+    html += '<div class="learn-loading">טוען לימוד יומי… אם זה נמשך, בדקו חיבור לאינטרנט.</div>';
   } else {
-    if (daf) {
-      var dafName = (daf.displayValue && daf.displayValue.he) || (daf.displayValue && daf.displayValue.en) || '';
-      html += '<div class="learn-row">' +
-        '<div class="learn-item-title">📖 דף יומי · <b>' + esc(dafName) + '</b></div>' +
-        '<div class="learn-links">' +
-        learningLinkBtn('📄 ספריא', sefariaHref(daf.url), 'primary') +
-        learningLinkBtn("▶ ר' סטפנסקי", 'https://www.5minutedaf.com', '') +
-        learningLinkBtn("🎙 ר' אורנשטיין", 'https://daf-yomi.com', '') +
-        '</div></div>';
-    }
-    if (tehillim) {
-      var tehillimName = (tehillim.displayValue && tehillim.displayValue.he) || '';
-      html += '<div class="learn-row">' +
-        '<div class="learn-item-title">🙏 תהילים יומי · <b>' + esc(tehillimName) + '</b></div>' +
-        '<div class="learn-links">' +
-        learningLinkBtn('📄 ספריא', sefariaHref(tehillim.url), 'primary') +
-        '</div></div>';
-    }
-    if (parasha) {
-      var parashaName = (parasha.displayValue && parasha.displayValue.he) || '';
-      html += '<div class="learn-row">' +
-        '<div class="learn-item-title">📜 שניים מקרא · <b>' + esc(parashaName) + '</b></div>' +
-        '<div class="learn-links">' +
-        learningLinkBtn('📄 ספריא', sefariaHref(parasha.url), 'primary') +
-        '</div></div>';
-    }
+    if (daf) html += row('📖', 'דף יומי', daf, 'daf');
+    if (tehillim) html += row('🙏', 'תהילים יומי', tehillim, 'tehillim');
+    if (parasha) html += row('📜', 'שניים מקרא', parasha, 'parasha');
   }
 
   html += '</div>';
@@ -687,16 +733,15 @@ function renderMussarCard() {
   var el = document.getElementById('mussarCard');
   if (!el) return;
   var entry = mussarToday();
-  var sefUrl = 'https://www.sefaria.org.il/' + encodeURIComponent(entry.ref) + '?lang=he';
   el.innerHTML =
     '<div class="mussar-card">' +
       '<div class="mussar-title">🌱 מוסר יומי</div>' +
       '<div class="mussar-body">' +
         '<div class="mussar-book">' + esc(entry.book) + '</div>' +
         '<div class="mussar-section">' + esc(entry.section) + '</div>' +
+        readerBlock('mussar', mussarRefs(entry)) +
         '<div class="mussar-mission-label">משימת היום</div>' +
         '<div class="mussar-mission">' + esc(entry.mission) + '</div>' +
-        '<a class="mussar-link" href="' + esc(sefUrl) + '" target="_blank" rel="noopener noreferrer">📄 קרא בספריא</a>' +
       '</div>' +
     '</div>';
 }
