@@ -18,6 +18,65 @@ const PALETTE = [
   { color: '#F4B89F', textColor: '#7C3A0C' },
 ];
 
+/* ===================== מחזור לימוד מוסר יומי ===================== */
+const MUSSAR_CYCLE = [
+  // מסילת ישרים
+  { book: 'מסילת ישרים', section: 'חובת האדם בעולמו', ref: 'Mesillat_Yesharim.1',
+    mission: 'שאל את עצמך: מה הייתה המטרה האמיתית שלי היום? רשום משפט אחד.' },
+  { book: 'מסילת ישרים', section: 'מדת הזהירות', ref: 'Mesillat_Yesharim.2',
+    mission: 'לפני כל פעולה גדולה — עצור שנייה ושאל: האם זה מביא אותי קרוב לה\'?' },
+  { book: 'מסילת ישרים', section: 'המונעים את הזהירות', ref: 'Mesillat_Yesharim.4',
+    mission: 'אתר הרגל אחד שמונע ממך זהירות יותר — וחשוב כיצד להתגבר עליו.' },
+  { book: 'מסילת ישרים', section: 'מדת הזריזות', ref: 'Mesillat_Yesharim.5',
+    mission: 'בצע דבר אחד שדחית — עשה אותו בזריזות ובשמחה, עוד היום.' },
+  { book: 'מסילת ישרים', section: 'קניין הזריזות', ref: 'Mesillat_Yesharim.7',
+    mission: 'קבע שעה קבועה ללימוד מחר — ועמוד בה בזריזות, בלי לדחות.' },
+  { book: 'מסילת ישרים', section: 'מדת הנקיות', ref: 'Mesillat_Yesharim.8',
+    mission: 'בדוק: האם יש דבר שעשית שלא היה לגמרי ישר? אם כן — תקן.' },
+  { book: 'מסילת ישרים', section: 'מדת הפרישות', ref: 'Mesillat_Yesharim.10',
+    mission: 'הימנע היום מהנאה אחת שאינה הכרחית — אוכל, מסך, שיחה.' },
+  { book: 'מסילת ישרים', section: 'מדת הטהרה', ref: 'Mesillat_Yesharim.12',
+    mission: 'נסה לכוון לבך בתפילה — אפילו בפסוק אחד בלבד, במתינות.' },
+  { book: 'מסילת ישרים', section: 'מדת החסידות', ref: 'Mesillat_Yesharim.13',
+    mission: 'עשה טובה לאחר — גם כשאינך חייב לכך, וגם בלי שידעו.' },
+  { book: 'מסילת ישרים', section: 'מדת הענווה', ref: 'Mesillat_Yesharim.16',
+    mission: 'אם נכנסת לוויכוח — נסה לסיים עם: "יכול להיות שאתה צודק".' },
+  { book: 'מסילת ישרים', section: 'יראת חטא', ref: 'Mesillat_Yesharim.18',
+    mission: 'שים לב לדבר קטן שנמנעת ממנו היום מפני שאסור — ושמח על כך.' },
+  { book: 'מסילת ישרים', section: 'מדת הקדושה', ref: 'Mesillat_Yesharim.20',
+    mission: 'קדש דבר אחד גשמי היום — אכילה, שינה או שיחה — בכוונה מפורשת.' },
+
+  // אורחות צדיקים
+  { book: 'אורחות צדיקים', section: 'שער הגאוה', ref: 'Orchot_Tzadikim.1',
+    mission: 'שים לב אם עלתה מחשבת גאוה — הכר בה ואמור: "הכל מה\'".' },
+  { book: 'אורחות צדיקים', section: 'שער הכניעה', ref: 'Orchot_Tzadikim.2',
+    mission: 'בשיחה אחת היום — הקשב עד הסוף בלי להפריע כלל.' },
+  { book: 'אורחות צדיקים', section: 'שער הבושת', ref: 'Orchot_Tzadikim.3',
+    mission: 'האם יש משהו שעשית שלא גאה בו? חשוב אם יש לתקן.' },
+  { book: 'אורחות צדיקים', section: 'שער הרחמים', ref: 'Orchot_Tzadikim.5',
+    mission: 'עשה מעשה רחמים אחד — כלפי ילד, בן/בת זוג, או אדם זר.' },
+  { book: 'אורחות צדיקים', section: 'שער האהבה', ref: 'Orchot_Tzadikim.7',
+    mission: 'אמור לאדם קרוב משפט אמיתי של הערכה — מהלב, בלי להגזים.' },
+  { book: 'אורחות צדיקים', section: 'שער הקנאה', ref: 'Orchot_Tzadikim.9',
+    mission: 'אם עלה רגש קנאה — הפוך אותו: שמח בחלקו של האחר בפה ממש.' },
+  { book: 'אורחות צדיקים', section: 'שער השמחה', ref: 'Orchot_Tzadikim.10',
+    mission: 'מצא שלושה דברים לשמוח בהם — ושתף אחד עם אשתך בערב.' },
+  { book: 'אורחות צדיקים', section: 'שער העצבות', ref: 'Orchot_Tzadikim.11',
+    mission: 'אם מרגיש עצב — שאל: האם זו עצבות של תשובה (טובה) או של יאוש (לתקן)?' },
+  { book: 'אורחות צדיקים', section: 'שער הנדיבות', ref: 'Orchot_Tzadikim.12',
+    mission: 'תן משהו היום — זמן, מחשבה, כסף — לאדם שצריך, בלא ציפייה.' },
+  { book: 'אורחות צדיקים', section: 'שער התשובה', ref: 'Orchot_Tzadikim.14',
+    mission: 'חשוב על דבר אחד שרוצה לתקן — ועשה צעד קטן אחד עכשיו ממש.' },
+  { book: 'אורחות צדיקים', section: 'שער האמת', ref: 'Orchot_Tzadikim.17',
+    mission: 'שים לב להגזמה קטנה בדיבורך — ותשתדל לדייק היום.' },
+  { book: 'אורחות צדיקים', section: 'שער השתיקה', ref: 'Orchot_Tzadikim.18',
+    mission: 'לפני שאתה מגיב — המתן 3 שניות ושאל: האם זה בכלל צריך להיאמר?' },
+  { book: 'אורחות צדיקים', section: 'שער הדיבור', ref: 'Orchot_Tzadikim.19',
+    mission: 'בדוק: האם אמרת היום משהו שפגע? אם כן — התנצל כנה.' },
+  { book: 'אורחות צדיקים', section: 'שער הכעס', ref: 'Orchot_Tzadikim.20',
+    mission: 'אם תרגיש כעס עולה — צא רגע, נשום עמוק, ורק אז הגב בשקט.' },
+];
+
 /* ===================== כלים ===================== */
 function uid() {
   return Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-3);
@@ -90,7 +149,15 @@ function seedState() {
       makeTask(aTorah, 'לימוד תורה יומי', 'daily', 2, m1),
       makeTask(aTorah, 'שיעור / סדר שבועי', 'weekly', 3, m1),
       makeTask(aTefila, 'תפילה במניין', 'daily', 2, m1),
-      makeTask(aMidot, 'להישמר מכעס', 'daily', 2, 'shared'),
+      makeTask(aMidot, 'להישמר מכעס', 'daily', 3, 'shared'),
+      makeTask(aMidot, 'לדייק באמת ולהימנע מהגזמה', 'daily', 2, 'shared'),
+      makeTask(aMidot, 'לדון אחרים לכף זכות', 'daily', 2, 'shared'),
+      makeTask(aMidot, 'לשמוח ולמצוא את הטוב', 'daily', 2, 'shared'),
+      makeTask(aMidot, 'לחשוב לפני שמדברים', 'daily', 2, 'shared'),
+      makeTask(aMidot, 'ענווה — להקשיב לאחרים בלי להפריע', 'daily', 2, 'shared'),
+      makeTask(aMidot, 'שלום בית — שיחת ערב עם אשתי', 'daily', 2, m1),
+      makeTask(aMidot, 'לבצע את משימת המוסר היומית', 'daily', 3, 'shared'),
+      makeTask(aMidot, 'חשבון נפש על מידות השבוע', 'weekly', 4, 'shared'),
       makeTask(aChinuch, 'זמן איכות עם הילדים', 'daily', 2, 'shared'),
       makeTask(aChinuch, 'שיחה אישית עם כל ילד', 'weekly', 3, 'shared'),
       makeTask(aBayit, 'סדר וניקיון יומי', 'daily', 1, 'shared'),
@@ -525,7 +592,7 @@ function submitForm() {
 function closeForm() { document.getElementById('formModal').classList.remove('show'); formSubmit = null; }
 
 /* ===================== ניווט וריענון ===================== */
-function renderAll() { renderToday(); renderGoals(); renderScore(); renderReflect(); renderSettings(); }
+function renderAll() { renderToday(); renderMussarCard(); renderGoals(); renderScore(); renderReflect(); renderSettings(); }
 function switchTab(tab, btn) {
   document.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('active'); });
   document.querySelectorAll('.nav button').forEach(function (b) { b.classList.remove('active'); });
@@ -606,6 +673,32 @@ function renderLearningCard() {
 
   html += '</div>';
   el.innerHTML = html;
+}
+
+/* ===================== מוסר יומי ===================== */
+function mussarToday() {
+  var d = new Date(); d.setHours(0, 0, 0, 0);
+  var epoch = new Date('2020-01-01').getTime();
+  var days = Math.floor((d.getTime() - epoch) / 86400000);
+  return MUSSAR_CYCLE[Math.abs(days) % MUSSAR_CYCLE.length];
+}
+
+function renderMussarCard() {
+  var el = document.getElementById('mussarCard');
+  if (!el) return;
+  var entry = mussarToday();
+  var sefUrl = 'https://www.sefaria.org.il/' + encodeURIComponent(entry.ref) + '?lang=he';
+  el.innerHTML =
+    '<div class="mussar-card">' +
+      '<div class="mussar-title">🌱 מוסר יומי</div>' +
+      '<div class="mussar-body">' +
+        '<div class="mussar-book">' + esc(entry.book) + '</div>' +
+        '<div class="mussar-section">' + esc(entry.section) + '</div>' +
+        '<div class="mussar-mission-label">משימת היום</div>' +
+        '<div class="mussar-mission">' + esc(entry.mission) + '</div>' +
+        '<a class="mussar-link" href="' + esc(sefUrl) + '" target="_blank" rel="noopener noreferrer">📄 קרא בספריא</a>' +
+      '</div>' +
+    '</div>';
 }
 
 /* ===================== ענן (שלד — מופעל כשמגדירים Firebase) ===================== */

@@ -70,6 +70,35 @@
     .learn-link.primary:hover { background: #1b5e20; }
     .learn-loading { padding: 20px; text-align: center; color: #9ca3af; font-size: 13px; line-height: 1.7; }
 
+    /* ===== Mussar card ===== */
+    .mussar-card {
+      background: #fff; border-radius: 16px; margin-bottom: 18px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.05);
+    }
+    .mussar-title {
+      background: linear-gradient(90deg, #4c1d95, #6d28d9);
+      color: #fff; font-size: 13px; font-weight: 700;
+      padding: 11px 14px; letter-spacing: .04em;
+    }
+    .mussar-body { padding: 14px; }
+    .mussar-book { font-size: 12px; color: #7c3aed; font-weight: 700; margin-bottom: 3px; letter-spacing: .03em; }
+    .mussar-section { font-size: 17px; font-weight: 700; color: #111827; margin-bottom: 12px; }
+    .mussar-mission-label { font-size: 11px; font-weight: 700; color: #9ca3af; letter-spacing: .07em; margin-bottom: 7px; }
+    .mussar-mission {
+      font-size: 14px; color: #374151; line-height: 1.7;
+      background: #f5f3ff; border-right: 3px solid #7c3aed;
+      padding: 10px 14px; border-radius: 0 10px 10px 0; margin-bottom: 12px;
+    }
+    .mussar-link {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; padding: 7px 13px; border-radius: 9px;
+      border: 1px solid #ddd6fe; background: #f5f3ff;
+      color: #6d28d9; text-decoration: none; font-weight: 600;
+      transition: all .15s;
+    }
+    .mussar-link:hover { background: #ede9fe; }
+
     /* ===== Section labels ===== */
     .section-label { font-size: 11px; font-weight: 700; color: #9ca3af; margin: 18px 2px 8px; letter-spacing: .07em; }
 
@@ -272,6 +301,7 @@
   <div class="tab active" id="tab-today">
     <div id="todayHead"></div>
     <div id="learningCard"></div>
+    <div id="mussarCard"></div>
     <div id="todayList"></div>
   </div>
 
