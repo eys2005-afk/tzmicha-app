@@ -583,7 +583,7 @@ function renderLearningCard() {
         '<div class="learn-links">' +
         learningLinkBtn('📄 ספריא', sefariaHref(daf.url), 'primary') +
         learningLinkBtn("▶ ר' סטפנסקי", 'https://www.5minutedaf.com', '') +
-        learningLinkBtn("🎙 ר' אורנשטיין", 'https://dafyomi.co.il', '') +
+        learningLinkBtn("🎙 ר' אורנשטיין", 'https://daf-yomi.com', '') +
         '</div></div>';
     }
     if (tehillim) {
