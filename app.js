@@ -8,6 +8,13 @@
    התחברות וסנכרון בין מכשירים. כל עוד null — הנתונים נשמרים במכשיר זה. ---- */
 const FIREBASE_CONFIG = null;
 
+// _cloudConfig: FIREBASE_CONFIG overrides localStorage (dev convenience).
+// Users can configure via the Settings UI without editing code.
+var _cloudConfig = FIREBASE_CONFIG;
+(function () {
+  try { var s = localStorage.getItem('firebaseConfig'); if (s) _cloudConfig = JSON.parse(s); } catch (e) { /* ignore */ }
+}());
+
 /* ---- פלטת צבעים (תואמת לאפליקציית הנקודות) ---- */
 const PALETTE = [
   { color: '#B5D4F4', textColor: '#0C447C' },
@@ -495,11 +502,47 @@ function renderSettings() {
   }).join('');
   html += '<button class="addbtn" onclick="addMember()">+ הוסף משתמש</button>';
   html += '<div class="section-label">סנכרון וענן</div>';
-  html += '<div class="card"><div class="sub">' +
-    (cloud.enabled
-      ? 'מחובר לענן ✓ — הנתונים מסונכרנים בין כל המכשירים.'
-      : 'כרגע הנתונים נשמרים <b>במכשיר זה בלבד</b>. כדי לאפשר התחברות וסנכרון בין הנייד והמחשב — שלך ושל אשתך — צריך להפעיל Firebase (חינמי). ראו את קובץ ה-README, או בקשו ממני להקים את זה עבורכם.') +
-    '</div></div>';
+  if (cloud.status === 'connected') {
+    html += '<div class="card">' +
+      '<div class="cloud-ok">☁ מחובר לענן ✓</div>' +
+      '<div style="font-size:13px;color:#374151;margin:6px 0 10px">מחובר כ: <b>' + esc(cloud.user.email) + '</b><br>הנתונים מסונכרנים בין כל המכשירים.</div>' +
+      '<button class="addbtn" onclick="cloudSyncNow()">עדכן עכשיו</button>' +
+      '<button class="mini" style="width:auto;padding:0 14px;margin-top:8px" onclick="cloudLogout()">התנתקות</button>' +
+      '</div>';
+  } else if (cloud.status === 'configured') {
+    html += '<div class="card">' +
+      '<div style="font-size:13px;color:#374151;margin-bottom:12px">Firebase מוגדר — התחברו כדי להפעיל סנכרון.<br>' +
+      '<span style="font-size:12px;color:#9ca3af">השתמשו באותו דוא"ל וסיסמה בשני המכשירים.</span></div>' +
+      '<label style="display:block;font-size:13px;font-weight:600;margin-bottom:4px">דוא"ל</label>' +
+      '<input id="cloudEmail" type="email" placeholder="family@email.com" style="display:block;width:100%;padding:9px 10px;border:1px solid #d1d5db;border-radius:9px;font-size:15px;box-sizing:border-box;margin-bottom:10px">' +
+      '<label style="display:block;font-size:13px;font-weight:600;margin-bottom:4px">סיסמה</label>' +
+      '<input id="cloudPass" type="password" placeholder="••••••••" style="display:block;width:100%;padding:9px 10px;border:1px solid #d1d5db;border-radius:9px;font-size:15px;box-sizing:border-box;margin-bottom:6px">' +
+      '<div id="cloudMsg" style="color:#dc2626;font-size:13px;min-height:18px;margin-bottom:8px"></div>' +
+      '<div style="display:flex;gap:8px">' +
+        '<button class="addbtn" style="margin-top:0;flex:1" onclick="cloudLogin()">כניסה</button>' +
+        '<button class="addbtn" style="margin-top:0;flex:1" onclick="cloudSignup()">הרשמה</button>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px;margin-top:8px">' +
+        '<button class="mini" style="width:auto;padding:0 12px" onclick="cloudForgotPassword()">שכחתי סיסמה</button>' +
+        '<button class="mini danger" style="width:auto;padding:0 12px" onclick="cloudRemoveConfig()">הסר הגדרות</button>' +
+      '</div></div>';
+  } else {
+    html += '<div class="card">' +
+      '<div style="font-size:13px;color:#374151;margin-bottom:10px">כרגע הנתונים נשמרים <b>במכשיר זה בלבד</b>.<br>' +
+      'כדי לסנכרן בין הנייד והמחשב — שלך ושל אשתך — הפעילו Firebase (חינמי, כ-5 דקות).</div>' +
+      '<details style="margin-bottom:10px"><summary style="cursor:pointer;font-weight:600;color:#1b5e20;font-size:13px">⟨ איך מגדירים Firebase</summary>' +
+        '<ol style="margin:8px 0 4px 18px;font-size:12px;line-height:2;color:#374151">' +
+          '<li>פתחו <code>console.firebase.google.com</code> → צרו פרויקט חדש</li>' +
+          '<li>הוסיפו Web App (⊕) → העתיקו את אובייקט ה-<code>firebaseConfig</code></li>' +
+          '<li>הפעילו Authentication → Sign-in → Email/Password</li>' +
+          '<li>הפעילו Firestore Database → Start in production mode</li>' +
+          '<li>בFirestore → Rules → הדביקו:<br><code>match /households/{uid} {<br>&nbsp;allow read,write: if request.auth.uid==uid;<br>}</code></li>' +
+          '<li>לחצו כאן → הדביקו את ה-JSON</li>' +
+        '</ol>' +
+      '</details>' +
+      '<button class="addbtn" onclick="cloudSetupFlow()">הגדר סנכרון ענן ←</button>' +
+      '</div>';
+  }
   html += '<div class="section-label">נתונים וגיבוי</div>';
   html += '<div class="card">' +
     '<button class="addbtn" onclick="exportData()">⬇ ייצוא גיבוי (קובץ)</button>' +
@@ -746,11 +789,193 @@ function renderMussarCard() {
     '</div>';
 }
 
-/* ===================== ענן (שלד — מופעל כשמגדירים Firebase) ===================== */
-const cloud = {
+/* ===================== ענן — Firebase Sync ===================== */
+var cloud = {
+  // status: 'unconfigured' | 'configured' (SDK ready, not logged in) | 'connected' (logged in)
+  status: _cloudConfig ? 'configured' : 'unconfigured',
   enabled: false,
-  push: function () { /* בעת הפעלת Firebase: כתיבת state למסמך המשק */ },
+  user: null,
+  auth: null,
+  db: null,
+  _timer: null,
+
+  _ref: function () {
+    return (cloud.user && cloud.db) ? cloud.db.collection('households').doc(cloud.user.uid) : null;
+  },
+
+  push: function () {
+    if (!cloud.enabled) return;
+    clearTimeout(cloud._timer);
+    cloud._timer = setTimeout(function () {
+      var r = cloud._ref();
+      if (r) r.set({ s: JSON.stringify(state), t: Date.now() }).catch(function (e) { console.warn('cloud push', e); });
+    }, 1200);
+  },
+
+  pull: function () {
+    var r = cloud._ref();
+    if (!r) return Promise.resolve();
+    return r.get().then(function (snap) {
+      if (!snap.exists) { cloud.push(); return; }
+      var remote;
+      try { remote = JSON.parse(snap.data().s); } catch (e) { return; }
+      if (remote) { state = mergeRemoteState(state, remote); saveState(); }
+    }).catch(function (e) { console.warn('cloud pull', e); });
+  },
+
+  init: function (auth, db) {
+    cloud.auth = auth;
+    cloud.db = db;
+    auth.onAuthStateChanged(function (u) {
+      cloud.user = u;
+      cloud.enabled = !!u;
+      cloud.status = u ? 'connected' : 'configured';
+      if (u) { cloud.pull().then(function () { renderAll(); renderSettings(); }); }
+      else { renderSettings(); }
+    });
+  },
+
+  login:    function (email, pw) { return cloud.auth.signInWithEmailAndPassword(email, pw); },
+  signup:   function (email, pw) { return cloud.auth.createUserWithEmailAndPassword(email, pw); },
+  resetPw:  function (email)     { return cloud.auth.sendPasswordResetEmail(email); },
+
+  logout: function () {
+    if (cloud.auth) cloud.auth.signOut();
+    cloud.enabled = false; cloud.user = null; cloud.status = 'configured';
+    renderSettings();
+  },
+
+  removeConfig: function () {
+    if (!confirm('להסיר הגדרות Firebase? תצטרכו להגדיר שוב כדי להתחבר לענן.')) return;
+    cloud.logout();
+    try { localStorage.removeItem('firebaseConfig'); } catch (e) { /* ignore */ }
+    _cloudConfig = null;
+    cloud.status = 'unconfigured';
+    renderSettings();
+  },
 };
+
+/* ---- Cloud helpers ---- */
+function mergeRemoteState(local, remote) {
+  if (!remote || !remote.version) return local;
+  var merged = JSON.parse(JSON.stringify(remote));
+  // Members: keep local edits, add remote-only members
+  var mMap = {};
+  local.members.forEach(function (m) { mMap[m.id] = m; });
+  remote.members.forEach(function (m) { if (!mMap[m.id]) mMap[m.id] = m; });
+  merged.members = Object.values(mMap);
+  // Tasks: union by id, remote wins on conflict
+  var tMap = {};
+  local.tasks.forEach(function (t) { tMap[t.id] = t; });
+  remote.tasks.forEach(function (t) { tMap[t.id] = t; });
+  merged.tasks = Object.values(tMap);
+  // Log: union by composite key (last-write-wins per period entry)
+  var lMap = {};
+  function lk(l) { return l.taskId + '|' + l.memberId + '|' + l.periodKey; }
+  local.log.forEach(function (l) { lMap[lk(l)] = l; });
+  remote.log.forEach(function (l) { lMap[lk(l)] = l; });
+  merged.log = Object.values(lMap);
+  // Reflections: union by id
+  var rMap = {};
+  (local.reflections || []).forEach(function (r) { rMap[r.id] = r; });
+  (remote.reflections || []).forEach(function (r) { rMap[r.id] = r; });
+  merged.reflections = Object.values(rMap);
+  merged.currentMemberId = local.currentMemberId;
+  return merged;
+}
+
+function loadFirebaseSDK() {
+  return new Promise(function (resolve, reject) {
+    if (typeof firebase !== 'undefined') { resolve(); return; }
+    var urls = [
+      'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
+      'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js',
+      'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js',
+    ];
+    var n = 0;
+    urls.forEach(function (src) {
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = function () { if (++n === urls.length) resolve(); };
+      s.onerror = function () { reject(new Error('Failed to load Firebase SDK')); };
+      document.head.appendChild(s);
+    });
+  });
+}
+
+function initCloudSync(cfg) {
+  return loadFirebaseSDK().then(function () {
+    var app;
+    try { app = firebase.app(); } catch (e) { app = firebase.initializeApp(cfg); }
+    cloud.init(firebase.auth(app), firebase.firestore(app));
+  });
+}
+
+/* Cloud Settings UI handlers */
+function cloudSetupFlow() {
+  openForm('הגדרת Firebase Sync', [
+    { key: 'cfg', label: 'הדביקו את ה-firebaseConfig מ-Firebase Console (JSON):', type: 'textarea', value: '' },
+  ], function (d) {
+    var cfg;
+    try { cfg = JSON.parse(d.cfg.trim()); } catch (e) { alert('JSON לא תקין: ' + e.message); return; }
+    if (!cfg.apiKey || !cfg.projectId) { alert('חסרים שדות — ודאו שהדבקתם את כל אובייקט ה-firebaseConfig'); return; }
+    try { localStorage.setItem('firebaseConfig', JSON.stringify(cfg)); } catch (e) { /* ignore */ }
+    _cloudConfig = cfg;
+    cloud.status = 'configured';
+    renderSettings();
+    initCloudSync(cfg).catch(function (e) { alert('שגיאת Firebase: ' + e.message); });
+  });
+}
+
+function _cloudFields() {
+  return {
+    email: document.getElementById('cloudEmail'),
+    pass:  document.getElementById('cloudPass'),
+    msg:   document.getElementById('cloudMsg'),
+  };
+}
+function _authErr(e) {
+  return ({
+    'auth/user-not-found':       'משתמש לא נמצא',
+    'auth/wrong-password':       'סיסמה שגויה',
+    'auth/invalid-credential':   'דוא"ל או סיסמה שגויים',
+    'auth/email-already-in-use': 'דוא"ל כבר רשום — נסו להתחבר',
+    'auth/weak-password':        'הסיסמה קצרה מדי (לפחות 6 תווים)',
+    'auth/invalid-email':        'כתובת דוא"ל לא תקינה',
+    'auth/network-request-failed': 'אין חיבור לאינטרנט',
+    'auth/too-many-requests':    'יותר מדי ניסיונות — נסו מאוחר יותר',
+  })[e.code] || e.message;
+}
+
+function cloudLogin() {
+  var f = _cloudFields();
+  if (f.msg) f.msg.textContent = 'מתחבר…';
+  cloud.login((f.email && f.email.value) || '', (f.pass && f.pass.value) || '')
+    .catch(function (e) { if (f.msg) f.msg.textContent = _authErr(e); });
+}
+function cloudSignup() {
+  var f = _cloudFields();
+  var addr = (f.email && f.email.value) || '';
+  if (!confirm('ליצור חשבון בית חדש עם הדוא"ל: ' + addr + '?\n\nהשתמשו באותו דוא"ל וסיסמה בשני המכשירים.')) return;
+  if (f.msg) f.msg.textContent = 'יוצר חשבון…';
+  cloud.signup(addr, (f.pass && f.pass.value) || '')
+    .catch(function (e) { if (f.msg) f.msg.textContent = _authErr(e); });
+}
+function cloudForgotPassword() {
+  var f = _cloudFields();
+  var addr = (f.email && f.email.value.trim()) || prompt('הכנס כתובת דוא"ל:');
+  if (!addr) return;
+  cloud.resetPw(addr).then(function () { alert('קישור לאיפוס נשלח לדוא"ל.'); }).catch(function (e) { alert(_authErr(e)); });
+}
+function cloudLogout() { cloud.logout(); }
+function cloudRemoveConfig() { cloud.removeConfig(); }
+function cloudSyncNow() {
+  var btn = event && event.target;
+  if (btn) { btn.disabled = true; btn.textContent = 'מעדכן…'; }
+  cloud.pull().then(function () { renderAll(); }).catch(function () { /* ignore */ }).finally(function () {
+    if (btn) { btn.disabled = false; btn.textContent = 'עדכן עכשיו'; }
+  });
+}
 
 /* ===================== אתחול ===================== */
 function normalizeState() {
@@ -767,7 +992,9 @@ function init() {
   saveState();
   renderAll();
   fetchLearning();
-  // רישום Service Worker (רק בהגשה דרך שרת, לא בפתיחת קובץ מקומי)
+  if (_cloudConfig) {
+    initCloudSync(_cloudConfig).catch(function (e) { console.warn('Firebase init:', e); });
+  }
   if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
     navigator.serviceWorker.register('sw.js').catch(function () {});
   }
